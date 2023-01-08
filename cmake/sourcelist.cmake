@@ -1,0 +1,12 @@
+set(SOURCES
+	src/HitSpell.h
+	src/HitSpell.cpp
+	src/Events.h
+	src/Events.cpp
+	src/Configs.h
+	src/Configs.cpp
+	src/Utils.h
+	src/Utils.cpp
+	src/PCH.h
+	src/main.cpp
+)
