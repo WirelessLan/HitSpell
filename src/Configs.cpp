@@ -8,94 +8,11 @@
 #include "Utils.h"
 
 namespace Configs {
-	std::unordered_map<uint32_t, BodyPartSpell>* ConfigMap::GetRaceMap(uint32_t a_weapID, uint32_t a_ammoID) {
-		uint64_t key = static_cast<uint64_t>(a_weapID) << 32 | a_ammoID;
-
-		auto map_iter = spellMap.find(key);
-		if (map_iter == spellMap.end())
-			return nullptr;
-
-		return &map_iter->second;
+	const HitSpell::SpellMap& ConfigMap::GetSpellMap() {
+		return spellMap;
 	}
 
-	RE::SpellItem* ConfigMap::GetSpellByFormID(uint32_t a_weapID, uint32_t a_ammoID, uint32_t a_vicRaceID, int32_t a_bodyPartType) {
-		auto raceMap = GetRaceMap(a_weapID, a_ammoID);
-		if (raceMap) {
-			RE::SpellItem* retSpell = nullptr;
-
-			auto raceMap_iter = raceMap->find(a_vicRaceID);
-			if (raceMap_iter != raceMap->end()) {
-				retSpell = GetSpellByBodyPartType(raceMap_iter->second, a_bodyPartType);
-				if (retSpell)
-					return retSpell;
-			}
-
-			if (a_vicRaceID != 0) {
-				raceMap_iter = raceMap->find(0);
-				if (raceMap_iter != raceMap->end()) {
-					retSpell = GetSpellByBodyPartType(raceMap_iter->second, a_bodyPartType);
-					if (retSpell)
-						return retSpell;
-				}
-			}
-		}
-		
-		return nullptr;
-	}
-
-	RE::SpellItem* ConfigMap::GetSpellByBodyPartType(const BodyPartSpell& bps, int32_t a_bodyPartType) {
-		if (a_bodyPartType == -1)
-			return nullptr;
-
-		if (bps.Part[a_bodyPartType])
-			return bps.Part[a_bodyPartType];
-
-		if (bps.Whole)
-			return bps.Whole;
-
-		return nullptr;
-	}
-
-	RE::SpellItem* ConfigMap::GetSpell(RE::TESForm* a_weap, RE::TESAmmo* a_ammo, RE::TESRace* a_vicRace, int32_t a_bodyPartType) {
-		if (a_bodyPartType == -1)
-			return nullptr;
-
-		uint32_t weapFormID = a_weap ? a_weap->formID : 0;
-		uint32_t ammoFormID = a_ammo ? a_ammo->formID : 0;
-		uint32_t raceFormID = a_vicRace ? a_vicRace->formID : 0;
-
-		RE::SpellItem* retSpell = nullptr;
-
-		// 1. Weap, Ammo
-		retSpell = GetSpellByFormID(weapFormID, ammoFormID, raceFormID, a_bodyPartType);
-		if (retSpell)
-			return retSpell;
-
-		// a_ammo가 null인 경우(근접공격) 1과 2, 3과 4가 서로 중복되므로 불필요한 체크 제거를 위해
-		if (a_ammo) {
-			// 2. Weap, *
-			retSpell = GetSpellByFormID(weapFormID, 0, raceFormID, a_bodyPartType);
-			if (retSpell)
-				return retSpell;
-
-			// 3. *, Ammo
-			retSpell = GetSpellByFormID(0, ammoFormID, raceFormID, a_bodyPartType);
-			if (retSpell)
-				return retSpell;
-		}
-
-		// 4. *, *
-		retSpell = GetSpellByFormID(0, 0, raceFormID, a_bodyPartType);
-		if (retSpell)
-			return retSpell;
-
-		return nullptr;
-	}
-
-	void ConfigMap::AddSpell(RE::TESForm* a_weap, RE::TESAmmo* a_ammo, RE::TESRace* a_vicRace, int32_t a_bodyPartType, RE::SpellItem* a_spell) {
-		if (!a_spell)
-			return;
-
+	void ConfigMap::AddSpell(RE::TESForm* a_weap, RE::TESAmmo* a_ammo, RE::TESRace* a_vicRace, int32_t a_bodyPartType, RE::SpellItem* a_spell, HitSpell::PriorityData& priority) {
 		uint32_t weapFormID = a_weap ? a_weap->formID : 0;
 		uint32_t ammoFormID = a_ammo ? a_ammo->formID : 0;
 		uint32_t raceFormID = a_vicRace ? a_vicRace->formID : 0;
@@ -104,9 +21,8 @@ namespace Configs {
 
 		auto map_iter = spellMap.find(key);
 		if (map_iter == spellMap.end()) {
-			BodyPartSpell nBPSpell;
-			std::memset(&nBPSpell, 0, sizeof(nBPSpell));
-			std::unordered_map<uint32_t, BodyPartSpell> newVicMap = { std::make_pair(raceFormID, nBPSpell) };
+			HitSpell::BodyPartSpell nBPSpell;
+			std::unordered_map<uint32_t, HitSpell::BodyPartSpell> newVicMap = { std::make_pair(raceFormID, nBPSpell) };
 
 			auto ins_res = spellMap.insert(std::make_pair(key, newVicMap));
 			if (!ins_res.second)
@@ -117,9 +33,7 @@ namespace Configs {
 
 		auto vr_iter = map_iter->second.find(raceFormID);
 		if (vr_iter == map_iter->second.end()) {
-			BodyPartSpell nBPSpell;
-			std::memset(&nBPSpell, 0, sizeof(nBPSpell));
-
+			HitSpell::BodyPartSpell nBPSpell;
 			auto ins_res = map_iter->second.insert(std::make_pair(raceFormID, nBPSpell));
 			if (!ins_res.second)
 				return;
@@ -128,9 +42,9 @@ namespace Configs {
 		}
 
 		if (a_bodyPartType == -1)
-			vr_iter->second.Whole = a_spell;
+			vr_iter->second.Whole.push_back({ a_spell, priority });
 		else
-			vr_iter->second.Part[a_bodyPartType] = a_spell;
+			vr_iter->second.Part[a_bodyPartType].push_back({ a_spell, priority });
 	}
 
 	std::string GetIniValue(const char* section, const char* key) {
@@ -195,17 +109,17 @@ namespace Configs {
 		return Utils::GetFormFromIdentifier(pluginName, formID);
 	}
 
-	void LoadConfigFile(ConfigMap* cMap, const std::filesystem::path& path) {
+	void LoadConfigFile(ConfigMap* cMap, const std::string& path) {
 		std::ifstream configFile(path);
 
-		logger::info(FMT_STRING("Loading Config file: {}"), path.string());
+		logger::info(FMT_STRING("Loading Config file: {}"), path);
 		if (!configFile.is_open()) {
-			logger::warn(FMT_STRING("Cannot open the config file: {}"), path.string());
+			logger::warn(FMT_STRING("Cannot open the config file: {}"), path);
 			return;
 		}
 
 		std::string line;
-		std::string weapFormStr, ammoFormStr, vicRaceFormStr, hitLocStr, spellFormStr;
+		std::string weapFormStr, ammoFormStr, vicRaceFormStr, hitLocStr, spellFormStr, priorityStr, topPriorityOnlyCastStr;
 		while (std::getline(configFile, line)) {
 			Utils::Trim(line);
 			if (line.empty() || line[0] == '#')
@@ -237,9 +151,21 @@ namespace Configs {
 				continue;
 			}
 
-			spellFormStr = GetNextData(line, index, 0);
+			spellFormStr = GetNextData(line, index, ',');
 			if (spellFormStr.empty()) {
 				logger::warn(FMT_STRING("Cannot read the spellForm: {}"), line);
+				continue;
+			}
+
+			priorityStr = GetNextData(line, index, ',');
+			if (priorityStr.empty()) {
+				logger::warn(FMT_STRING("Cannot read the priority: {}"), line);
+				continue;
+			}
+			
+			topPriorityOnlyCastStr = GetNextData(line, index, 0);
+			if (topPriorityOnlyCastStr.empty()) {
+				logger::warn(FMT_STRING("Cannot read the topPriorityOnlyCast: {}"), line);
 				continue;
 			}
 
@@ -270,8 +196,16 @@ namespace Configs {
 				}
 			}
 
-			int32_t hitLoc = std::stol(hitLocStr);
-			if (hitLoc < -1 || hitLoc >= BodyPartType::kMax) {
+			int32_t hitLoc = -1;
+			try {
+				hitLoc = std::stol(hitLocStr);
+			}
+			catch (...) {
+				logger::warn(FMT_STRING("Failed to parse the hitLoc: {}"), line);
+				continue;
+			}
+
+			if (hitLoc < -1 || hitLoc >= HitSpell::BodyPartType::kMax) {
 				logger::warn(FMT_STRING("Invalid hitLoc: {}"), line);
 				continue;
 			}
@@ -282,12 +216,33 @@ namespace Configs {
 				continue;
 			}
 
-			cMap->AddSpell(weapForm, ammoForm, vicRaceForm, hitLoc, spellForm);
+			uint64_t priority = 0;
+			try {
+				priority = std::stoll(priorityStr);
+			}
+			catch (...) {
+				logger::warn(FMT_STRING("Failed to parse the priority: {}"), line);
+				continue;
+			}
 
-			logger::info(FMT_STRING("Spell Added: [{}] [{}] [{}] [{}] [{}]"), weapFormStr, ammoFormStr, vicRaceFormStr, hitLocStr, spellFormStr);
+			bool topPriorityOnlyCast = false;
+			try {
+				topPriorityOnlyCast = std::stol(topPriorityOnlyCastStr) == 1;
+			}
+			catch (...) {
+				logger::warn(FMT_STRING("Failed to parse the topPriorityOnlyCast: {}"), line);
+				continue;
+			}
+
+			HitSpell::PriorityData priorityData = { priority, topPriorityOnlyCast };
+
+			cMap->AddSpell(weapForm, ammoForm, vicRaceForm, hitLoc, spellForm, priorityData);
+
+			logger::info(FMT_STRING("Spell Added: Weapon[{}] Ammo[{}] Race[{}] HitLoc[{}] Spell[{}] Priority[{}] TopPriorityCastOnly[{}]"), 
+				weapFormStr, ammoFormStr, vicRaceFormStr, hitLocStr, spellFormStr, priority, topPriorityOnlyCast);
 		}
 
-		logger::info(FMT_STRING("Config file loaded: {}"), path.string());
+		logger::info(FMT_STRING("Config file loaded: {}"), path);
 	}
 
 	void LoadConfigs() {
@@ -312,7 +267,7 @@ namespace Configs {
 			if (!std::regex_match(iter.path().filename().string(), filter))
 				continue;
 
-			LoadConfigFile(g_configMap, iter.path());
+			LoadConfigFile(g_configMap, iter.path().string());
 		}
 
 		configLoaded = true;

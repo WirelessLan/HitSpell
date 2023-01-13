@@ -69,8 +69,7 @@ namespace Events {
 
 	RE::TESObjectREFR* GetObjectRefFromHandle(const RE::ObjectRefHandle& a_handle) {
 		auto ptr = a_handle.get();
-		if (!ptr)
-			return nullptr;
+		if (!ptr) return nullptr;
 		return ptr.get();
 	}
 
@@ -80,8 +79,7 @@ namespace Events {
 			if (a_evn.hasHitData) {
 				RE::TESObjectREFR* attacker = a_evn.attacker ? a_evn.attacker : GetObjectRefFromHandle(a_evn.hitdata.attackerHandle);
 				RE::TESObjectREFR* victim = a_evn.victim ? a_evn.victim : GetObjectRefFromHandle(a_evn.hitdata.victimHandle);
-				if (attacker && victim)
-					HitSpell::ProcessHit(attacker, victim, a_evn.hitdata.source.object, a_evn.hitdata.ammo, a_evn.hitdata.bodypartType);
+				HitSpell::ProcessHit(attacker, victim, a_evn.hitdata.source.object, a_evn.hitdata.ammo, a_evn.hitdata.bodypartType);
 			}
 			return RE::BSEventNotifyControl::kContinue;
 		}
