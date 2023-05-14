@@ -27,7 +27,7 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" CACHE 
 
 project(
 	HitSpell
-	VERSION 0.2.0
+	VERSION 0.2.1
 	LANGUAGES CXX
 )
 

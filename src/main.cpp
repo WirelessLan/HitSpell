@@ -26,7 +26,7 @@ extern "C" DLLEXPORT bool F4SEAPI F4SEPlugin_Query(const F4SE::QueryInterface * 
 	auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path->string(), true);
 #endif
 
-	auto log = std::make_shared<spdlog::logger>("global log"s, std::move(sink));
+	auto log = std::make_shared<spdlog::logger>("Global"s, std::move(sink));
 
 #ifndef NDEBUG
 	log->set_level(spdlog::level::trace);
@@ -51,7 +51,7 @@ extern "C" DLLEXPORT bool F4SEAPI F4SEPlugin_Query(const F4SE::QueryInterface * 
 
 	const auto ver = a_f4se->RuntimeVersion();
 	if (ver < F4SE::RUNTIME_1_10_162) {
-		logger::critical(FMT_STRING("unsupported runtime v{}"), ver.string());
+		logger::critical("unsupported runtime v{}"sv, ver.string());
 		return false;
 	}
 

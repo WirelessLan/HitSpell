@@ -15,11 +15,11 @@ namespace Events {
 	class HitData {
 	public:
 		DamageImpactData impactData;
-		int8_t gap38[8];
+		std::int8_t gap38[8];
 		RE::ObjectRefHandle attackerHandle;
 		RE::ObjectRefHandle victimHandle;
 		RE::ObjectRefHandle sourceHandle;
-		int8_t gap4C[4];
+		std::int8_t gap4C[4];
 		RE::BGSAttackData* attackData;
 		RE::BGSObjectInstance source;
 		RE::MagicItem* effect;
@@ -40,25 +40,25 @@ namespace Events {
 		float field_B8;
 		float field_BC;
 		float criticalDamageMult;
-		uint32_t flags;
+		std::uint32_t flags;
 		RE::BGSEquipIndex equipIndex;
-		uint32_t materialType;
-		int32_t bodypartType;
-		int8_t gapD4[4];
+		std::uint32_t materialType;
+		std::int32_t bodypartType;
+		std::int8_t gapD4[4];
 	};
 	static_assert(sizeof(HitData) == 0xD8);
 
 	class TESHitEvent {
 	public:
 		HitData hitdata;
-		int8_t gapD8[8];
+		std::int8_t gapD8[8];
 		RE::TESObjectREFR* victim;
 		RE::TESObjectREFR* attacker;
 		RE::BSFixedString matName;
-		uint32_t sourceFormID;
-		uint32_t projFormID;
+		std::uint32_t sourceFormID;
+		std::uint32_t projFormID;
 		bool hasHitData;
-		int8_t gapD1[7];
+		std::int8_t gapD1[7];
 
 		static RE::BSTEventSource<TESHitEvent>* GetEventSource() {
 			REL::Relocation<RE::BSTEventSource<TESHitEvent>*> evnSrc{ REL::ID(989868) };

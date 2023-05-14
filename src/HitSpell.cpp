@@ -8,8 +8,8 @@ namespace HitSpell {
 		func(a_source, a_spell, a_target, a_weap);
 	}
 
-	const std::unordered_map<uint32_t, BodyPartSpell>* GetRaceMap(const SpellMap& a_spellMap, uint32_t a_weapID, uint32_t a_ammoID) {
-		uint64_t key = static_cast<uint64_t>(a_weapID) << 32 | a_ammoID;
+	const std::unordered_map<std::uint32_t, BodyPartSpell>* GetRaceMap(const SpellMap& a_spellMap, std::uint32_t a_weapID, std::uint32_t a_ammoID) {
+		std::uint64_t key = static_cast<std::uint64_t>(a_weapID) << 32 | a_ammoID;
 
 		auto map_iter = a_spellMap.find(key);
 		if (map_iter == a_spellMap.end())
@@ -18,7 +18,7 @@ namespace HitSpell {
 		return &map_iter->second;
 	}
 
-	std::vector<SpellData> GetSpellByBodyPartType(const BodyPartSpell& bps, int32_t a_bodyPartType) {
+	std::vector<SpellData> GetSpellByBodyPartType(const BodyPartSpell& bps, std::int32_t a_bodyPartType) {
 		std::vector<SpellData> retVec;
 
 		if (a_bodyPartType != -1 && !bps.Part[a_bodyPartType].empty())
@@ -30,7 +30,7 @@ namespace HitSpell {
 		return retVec;
 	}
 
-	std::vector<SpellData> GetSpellByFormID(const SpellMap& a_spellMap, uint32_t a_weapID, uint32_t a_ammoID, uint32_t a_vicRaceID, int32_t a_bodyPartType) {
+	std::vector<SpellData> GetSpellByFormID(const SpellMap& a_spellMap, std::uint32_t a_weapID, std::uint32_t a_ammoID, std::uint32_t a_vicRaceID, std::int32_t a_bodyPartType) {
 		std::vector<SpellData> retVec;
 
 		auto raceMap = GetRaceMap(a_spellMap, a_weapID, a_ammoID);
@@ -55,12 +55,12 @@ namespace HitSpell {
 		return retVec;
 	}
 
-	std::vector<SpellData> GetSpells(const SpellMap& a_spellMap, RE::TESForm* a_weap, RE::TESAmmo* a_ammo, RE::TESRace* a_vicRace, int32_t a_bodyPartType) {
+	std::vector<SpellData> GetSpells(const SpellMap& a_spellMap, RE::TESForm* a_weap, RE::TESAmmo* a_ammo, RE::TESRace* a_vicRace, std::int32_t a_bodyPartType) {
 		std::vector<SpellData> retVec;
 
-		uint32_t weapFormID = a_weap ? a_weap->formID : 0;
-		uint32_t ammoFormID = a_ammo ? a_ammo->formID : 0;
-		uint32_t raceFormID = a_vicRace ? a_vicRace->formID : 0;
+		std::uint32_t weapFormID = a_weap ? a_weap->formID : 0;
+		std::uint32_t ammoFormID = a_ammo ? a_ammo->formID : 0;
+		std::uint32_t raceFormID = a_vicRace ? a_vicRace->formID : 0;
 
 		// 1. Weap, Ammo
 		auto spellVec = GetSpellByFormID(a_spellMap, weapFormID, ammoFormID, raceFormID, a_bodyPartType);
@@ -90,7 +90,7 @@ namespace HitSpell {
 
 	class HitSpellProcessor : public F4SE::ITaskDelegate {
 	public:
-		HitSpellProcessor(RE::TESObjectREFR* a_attacker, RE::TESObjectREFR* a_victim, RE::TESForm* a_attackSource, RE::TESAmmo* a_attackSourceAmmo, int32_t a_bodyPartType) :
+		HitSpellProcessor(RE::TESObjectREFR* a_attacker, RE::TESObjectREFR* a_victim, RE::TESForm* a_attackSource, RE::TESAmmo* a_attackSourceAmmo, std::int32_t a_bodyPartType) :
 			attacker(a_attacker), victim(a_victim), attackSource(a_attackSource), attckSourceAmmo(a_attackSourceAmmo), bodyPartType(a_bodyPartType) {}
 
 		virtual void Run() {
@@ -115,7 +115,7 @@ namespace HitSpell {
 			std::sort(hitSpells.begin(), hitSpells.end());
 
 			bool isTopPriority = true;
-			uint64_t topPriority = 0;
+			std::uint64_t topPriority = 0;
 			for (SpellData& spellData : hitSpells) {
 				if (!isTopPriority && spellData.priority.priority != topPriority && spellData.priority.topPriorityCastOnly)
 					continue;
@@ -134,10 +134,10 @@ namespace HitSpell {
 		RE::TESObjectREFR* victim;
 		RE::TESForm* attackSource;
 		RE::TESAmmo* attckSourceAmmo;
-		int32_t bodyPartType;
+		std::int32_t bodyPartType;
 	};
 
-	void ProcessHit(RE::TESObjectREFR* a_attacker, RE::TESObjectREFR* a_victim, RE::TESForm* a_attackSource, RE::TESAmmo* a_attackSourceAmmo, int32_t a_bodyPartType) {
+	void ProcessHit(RE::TESObjectREFR* a_attacker, RE::TESObjectREFR* a_victim, RE::TESForm* a_attackSource, RE::TESAmmo* a_attackSourceAmmo, std::int32_t a_bodyPartType) {
 		if (!a_attacker || !a_victim || !a_attackSource)
 			return;
 

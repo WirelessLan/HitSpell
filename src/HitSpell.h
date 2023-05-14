@@ -1,7 +1,7 @@
 #pragma once
 
 namespace HitSpell {
-	enum BodyPartType : int32_t {
+	enum BodyPartType : std::int32_t {
 		kNone = -1,
 		kTorse,
 		kHead1,
@@ -34,7 +34,7 @@ namespace HitSpell {
 	};
 
 	struct PriorityData {
-		uint64_t priority;
+		std::uint64_t priority;
 		bool topPriorityCastOnly;
 	};
 
@@ -52,7 +52,7 @@ namespace HitSpell {
 		std::vector<SpellData> Part[BodyPartType::kMax];
 	};
 
-	using SpellMap = std::unordered_map <uint64_t, std::unordered_map<uint32_t, BodyPartSpell>>;
+	using SpellMap = std::unordered_map <std::uint64_t, std::unordered_map<std::uint32_t, BodyPartSpell>>;
 
-	void ProcessHit(RE::TESObjectREFR* a_attacker, RE::TESObjectREFR* a_victim, RE::TESForm* a_attackSource, RE::TESAmmo* a_attackSourceAmmo, int32_t a_bodyPartType);
+	void ProcessHit(RE::TESObjectREFR* a_attacker, RE::TESObjectREFR* a_victim, RE::TESForm* a_attackSource, RE::TESAmmo* a_attackSourceAmmo, std::int32_t a_bodyPartType);
 }

@@ -9,7 +9,7 @@ namespace Configs {
 
 		const HitSpell::SpellMap& GetSpellMap();
 
-		void AddSpell(RE::TESForm* a_weap, RE::TESAmmo* a_ammo, RE::TESRace* a_vicRace, int32_t a_bodyPartType, RE::SpellItem* a_spell, HitSpell::PriorityData& priority);
+		void AddSpell(RE::TESForm* a_weap, RE::TESAmmo* a_ammo, RE::TESRace* a_vicRace, std::int32_t a_bodyPartType, RE::SpellItem* a_spell, HitSpell::PriorityData& priority);
 
 		bool PlayerTargetEnabled() { return bEnablePlayerTarget; }
 		bool PlayerOnlyHitSpell() { return bPlayerOnlyHitSpell; }
